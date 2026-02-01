@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AppLayout } from '@/components/layouts/AppLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -11,8 +12,10 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { GrowthGarden } from '@/components/growth/GrowthGarden';
 import { UpcomingTab } from '@/components/upcoming/UpcomingTab';
-import { intakeApi, schedulingApi, type IntakeResponse } from '@/lib/api';
+import { intakeApi, schedulingApi, type IntakeResponse, type SlotResponse } from '@/lib/api';
 import { groupsApi, type GroupResponse } from '@/lib/api';
+import { format } from 'date-fns';
+import { MentraBackground } from '@/components/backgrounds/MentraBackground';
 import {
   MessageCircle,
   FileText,
@@ -25,7 +28,38 @@ import {
   Lock,
   DoorOpen,
   Loader2,
+  CheckCircle2,
 } from 'lucide-react';
+
+const STRESS_BALANCE_GROUP_NAME = 'Stress & Balance Support Circle';
+const STRESS_BALANCE_DESCRIPTION =
+  'A supportive space for people navigating work stress, burnout, and the challenge of finding balance. This group focuses on practical strategies and shared experiences.';
+const STRESS_BALANCE_MEMBERS = { filled: 4, total: 6, initials: ['AM', 'JK', 'SR', 'TP'] as const };
+const STRESS_BALANCE_WHY_RECOMMENDED =
+  'Based on what you shared about feeling overwhelmed at work and wanting to build healthier boundaries, this group aligns closely with your needs. The members are working through similar challenges, and the focus on practical coping strategies matches your goals.';
+const STRESS_BALANCE_ALIGNMENT = [
+  'Similar primary concerns around work stress',
+  'Shared goals of building boundaries',
+  'Matching emotional intensity level',
+] as const;
+
+const SAMPLE_AI_SUMMARY =
+  "From our conversation, it's clear you've been carrying a lot lately — especially around work and the pressure to always be \"on.\" You mentioned feeling stretched thin, struggling to switch off at the end of the day, and noticing how that stress has started to affect your sleep and energy levels. It takes courage to acknowledge when things feel heavy, and reaching out is an important first step.";
+const SAMPLE_PRIMARY_CONCERN = 'Work-related stress and burnout';
+const SAMPLE_EMOTIONAL_INTENSITY = { level: 'Moderate' as const, percent: 55 };
+const SAMPLE_AREAS_OF_IMPACT = [
+  'Work performance',
+  'Sleep quality',
+  'Energy levels',
+  'Personal relationships',
+  'Physical health',
+] as const;
+const SAMPLE_SUPPORT_GOALS = [
+  'Learn stress management techniques',
+  'Connect with others facing similar challenges',
+  'Build healthier boundaries between work and personal life',
+  'Develop a sustainable self-care routine',
+] as const;
 
 function mapEmotionalIntensity(value: number | null): { level: string; value: number } {
   if (value == null) return { level: '—', value: 0 };
@@ -39,12 +73,29 @@ function parseSupportGoals(s: string | null): string[] {
   return s.split(/[,;]|\n/).map((g) => g.trim()).filter(Boolean);
 }
 
+function getTimeGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function getFormattedDate(): string {
+  return new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).toUpperCase();
+}
+
 export default function ClientDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [showChatInstructions, setShowChatInstructions] = useState(false);
   const [intake, setIntake] = useState<IntakeResponse | null>(null);
   const [group, setGroup] = useState<GroupResponse | null>(null);
+  const [slots, setSlots] = useState<SlotResponse[]>([]);
   const [hasSlots, setHasSlots] = useState(false);
   const [loading, setLoading] = useState(true);
   const firstName = user?.name?.split(' ')[0] || 'there';
@@ -53,26 +104,18 @@ export default function ClientDashboard() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      try {
-        const [intakeRes, groupRes, slots] = await Promise.all([
-          intakeApi.get(),
-          groupsApi.my(),
-          schedulingApi.slots().catch(() => []),
-        ]);
-        if (!cancelled) {
-          setIntake(intakeRes);
-          setGroup(groupRes);
-          setHasSlots(Array.isArray(slots) && slots.length > 0);
-        }
-      } catch {
-        if (!cancelled) {
-          setIntake(null);
-          setGroup(null);
-          setHasSlots(false);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+      const [intakeSettled, groupSettled, slotsSettled] = await Promise.allSettled([
+        intakeApi.get(),
+        groupsApi.my(),
+        schedulingApi.slots(),
+      ]);
+      if (cancelled) return;
+      setIntake(intakeSettled.status === 'fulfilled' ? intakeSettled.value : null);
+      setGroup(groupSettled.status === 'fulfilled' ? groupSettled.value ?? null : null);
+      const slotsList = slotsSettled.status === 'fulfilled' ? slotsSettled.value : [];
+      setSlots(Array.isArray(slotsList) ? slotsList : []);
+      setHasSlots(Array.isArray(slotsList) && slotsList.length > 0);
+      setLoading(false);
     })();
     return () => { cancelled = true; };
   }, []);
@@ -102,33 +145,37 @@ export default function ClientDashboard() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-gradient-to-b from-secondary/30 to-background">
-        <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
-          {/* Greeting + status */}
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Welcome</p>
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-serif text-foreground">{firstName}</h1>
+      <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-secondary/30 to-background">
+        <MentraBackground variant="mid" className="z-0" />
+        <div className="relative z-10 max-w-5xl mx-auto px-4 py-8 space-y-8">
+          <Card className="border-border/60 bg-card/50 shadow-sm">
+            <CardContent className="p-6">
+              <p className="text-xs font-medium text-primary tracking-wide mb-1">
+                {getFormattedDate()}
+              </p>
+              <h1 className="text-2xl font-serif text-foreground">
+                {getTimeGreeting()}, <span className="text-primary">{firstName}</span>
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">Here&apos;s your space today</p>
               {statusCopy && (
-                <span className="text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                <span className="inline-block mt-3 text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full">
                   {statusCopy}
                 </span>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          {/* Primary Action Card */}
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent shadow-soft">
+          <Card className="border-border/60 bg-card/50 shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between gap-4">
                 <div className="space-y-1">
                   <h2 className="text-lg font-medium text-foreground">Ready to talk?</h2>
-                  <p className="text-sm text-muted-foreground">Start your conversation whenever you're ready.</p>
+                  <p className="text-sm text-muted-foreground">Start a new conversation or continue where you left off.</p>
                 </div>
                 <Button 
                   onClick={() => setShowChatInstructions(true)} 
                   size="lg"
-                  className="shrink-0 gap-2"
+                  className="shrink-0 gap-2 bg-primary hover:bg-primary/90"
                 >
                   <MessageCircle className="w-4 h-4" />
                   Start Chat
@@ -137,7 +184,6 @@ export default function ClientDashboard() {
             </CardContent>
           </Card>
 
-          {/* Chat instructions dialog (same content as chatinstructions page) */}
           <Dialog open={showChatInstructions} onOpenChange={setShowChatInstructions}>
             <DialogContent className="max-w-md max-h-[90vh] p-0 gap-0 overflow-hidden">
               <ScrollArea className="max-h-[85vh]">
@@ -197,7 +243,6 @@ export default function ClientDashboard() {
             </DialogContent>
           </Dialog>
 
-          {/* Secondary Navigation Tabs */}
           <Tabs defaultValue="summary" className="w-full">
             <TabsList className="w-full grid grid-cols-4 h-auto p-1">
               <TabsTrigger value="summary" className="flex flex-col gap-1 py-3 text-xs">
@@ -219,7 +264,6 @@ export default function ClientDashboard() {
             </TabsList>
 
             <div className="mt-6 space-y-6">
-              {/* My Summary Tab */}
               <TabsContent value="summary" className="mt-0 space-y-6">
                 {loading ? (
                   <Card className="border-dashed border-border/60 bg-muted/20">
@@ -228,94 +272,105 @@ export default function ClientDashboard() {
                       <p className="text-sm text-muted-foreground">Loading your summary…</p>
                     </CardContent>
                   </Card>
-                ) : !hasIntake ? (
-                  <EmptyState
-                    icon={<FileText className="w-12 h-12" />}
-                    message="Start a chat to get your personalized summary. Your reflection, primary concern, and goals will appear here once you've completed the conversation."
-                  />
                 ) : (
                   <>
-                    {intake?.contextual_background && (
-                      <Card>
-                        <CardContent className="p-6">
-                          <div className="flex items-center gap-2 mb-4">
-                            <Sparkles className="w-4 h-4 text-primary" />
-                            <h3 className="font-medium text-foreground">Summary</h3>
-                          </div>
-                          <p className="text-sm text-muted-foreground leading-relaxed">
-                            {intake.contextual_background}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    )}
-                    {intake?.primary_concern && (
-                      <Card>
+                    <Card className="border-border/60 bg-card/50 shadow-sm">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Sparkles className="w-4 h-4 text-primary" />
+                          <h3 className="font-medium text-foreground">AI Summary</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {(intake?.contextual_background?.trim()?.length ?? 0) > 60
+                            ? intake.contextual_background
+                            : SAMPLE_AI_SUMMARY}
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Card className="border-border/60 bg-card/50 shadow-sm">
                         <CardContent className="p-6">
                           <div className="flex items-center gap-2 mb-4">
                             <Heart className="w-4 h-4 text-primary" />
                             <h3 className="font-medium text-foreground">Primary Concern</h3>
                           </div>
-                          <p className="text-foreground">{intake.primary_concern}</p>
-                        </CardContent>
-                      </Card>
-                    )}
-                    {(intake?.emotional_intensity != null && intake.emotional_intensity >= 0) && (
-                      <Card>
-                        <CardContent className="p-6">
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-medium text-foreground">How you're feeling</h3>
-                            <Badge variant="secondary" className="font-normal">
-                              {emotionalDisplay.level}
-                            </Badge>
-                          </div>
-                          <Progress value={emotionalDisplay.value} className="h-2" />
-                          <p className="text-xs text-muted-foreground mt-3">
-                            This reflects the emotional weight of what you shared — not a score or diagnosis.
+                          <p className="text-foreground font-medium">
+                            {intake?.primary_concern?.trim()
+                              ? intake.primary_concern
+                              : SAMPLE_PRIMARY_CONCERN}
                           </p>
                         </CardContent>
                       </Card>
-                    )}
-                    {impactAreas.length > 0 && (
-                      <Card>
-                        <CardContent className="p-6">
-                          <h3 className="font-medium text-foreground mb-4">Areas of Impact</h3>
-                          <div className="flex flex-wrap gap-2">
-                            {impactAreas.map((area) => (
-                              <Badge
-                                key={area}
-                                variant="outline"
-                                className="font-normal bg-muted/50 border-border/60"
-                              >
-                                {area}
-                              </Badge>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-                    {supportGoalsList.length > 0 && (
-                      <Card>
+                      <Card className="border-border/60 bg-card/50 shadow-sm">
                         <CardContent className="p-6">
                           <div className="flex items-center gap-2 mb-4">
                             <Target className="w-4 h-4 text-primary" />
-                            <h3 className="font-medium text-foreground">What you're hoping for</h3>
+                            <h3 className="font-medium text-foreground">Emotional Intensity</h3>
                           </div>
-                          <ul className="space-y-3">
-                            {supportGoalsList.map((goal) => (
-                              <li key={goal} className="flex items-start gap-3 text-sm text-muted-foreground">
-                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary/60 shrink-0" />
-                                {goal}
-                              </li>
-                            ))}
-                          </ul>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-foreground">
+                              {intake?.emotional_intensity != null && intake.emotional_intensity >= 0
+                                ? emotionalDisplay.level
+                                : SAMPLE_EMOTIONAL_INTENSITY.level}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {intake?.emotional_intensity != null && intake.emotional_intensity >= 0
+                                ? `${emotionalDisplay.value}%`
+                                : `${SAMPLE_EMOTIONAL_INTENSITY.percent}%`}
+                            </span>
+                          </div>
+                          <Progress
+                            value={
+                              intake?.emotional_intensity != null && intake.emotional_intensity >= 0
+                                ? emotionalDisplay.value
+                                : SAMPLE_EMOTIONAL_INTENSITY.percent
+                            }
+                            className="h-2"
+                          />
                         </CardContent>
                       </Card>
-                    )}
+                    </div>
+
+                    <Card className="border-border/60 bg-card/50 shadow-sm">
+                      <CardContent className="p-6">
+                        <h3 className="font-medium text-foreground mb-4">Areas of Impact</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {(impactAreas.length > 0 ? impactAreas : [...SAMPLE_AREAS_OF_IMPACT]).map((area) => (
+                            <Badge
+                              key={area}
+                              variant="outline"
+                              className="font-normal bg-muted/50 border-border/60"
+                            >
+                              {area}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-border/60 bg-card/50 shadow-sm">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Users className="w-4 h-4 text-primary" />
+                          <h3 className="font-medium text-foreground">Support Goals</h3>
+                        </div>
+                        <ul className="space-y-3">
+                          {(supportGoalsList.length >= 3 ? supportGoalsList : [...SAMPLE_SUPPORT_GOALS]).map((goal, i) => (
+                            <li key={goal} className="flex items-start gap-3 text-sm text-muted-foreground">
+                              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary text-xs font-medium">
+                                {i + 1}
+                              </span>
+                              {goal}
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
                   </>
                 )}
               </TabsContent>
 
-              {/* My Group Tab */}
               <TabsContent value="group" className="mt-0 space-y-6">
                 {loading ? (
                   <Card className="border-dashed border-border/60 bg-muted/20">
@@ -330,45 +385,122 @@ export default function ClientDashboard() {
                     message="Complete your intake to get matched with a support group. Start a chat to share what's on your mind, then we'll recommend a group that fits."
                   />
                 ) : (
-                  <>
-                    <Card>
+                  <div className="space-y-6">
+                    <Card className="border-border/60 bg-card/50 shadow-sm">
                       <CardContent className="p-6 space-y-5">
                         <div>
-                          <h3 className="text-lg font-medium text-foreground">{group.name}</h3>
+                          <h3 className="text-lg font-semibold text-foreground">{group.name}</h3>
                           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                            {group.focus}
+                            {group.name === STRESS_BALANCE_GROUP_NAME
+                              ? STRESS_BALANCE_DESCRIPTION
+                              : group.focus}
                           </p>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-12 w-12 rounded-full bg-primary text-primary-foreground">
+                            <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">SC</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium text-foreground">Dr. Sarah Chen</p>
+                            <p className="text-sm text-muted-foreground">Licensed Clinical Psychologist</p>
+                          </div>
+                        </div>
+
+                        {group.name === STRESS_BALANCE_GROUP_NAME && (
+                          <div>
+                            <p className="text-sm font-medium text-foreground mb-2">Current Members</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {STRESS_BALANCE_MEMBERS.initials.map((initials) => (
+                                <Avatar key={initials} className="h-9 w-9 rounded-full border-2 border-background bg-primary/20 text-primary">
+                                  <AvatarFallback className="text-xs font-medium bg-transparent">{initials}</AvatarFallback>
+                                </Avatar>
+                              ))}
+                              {Array.from({ length: STRESS_BALANCE_MEMBERS.total - STRESS_BALANCE_MEMBERS.filled }).map((_, i) => (
+                                <div key={`empty-${i}`} className="h-9 w-9 rounded-full border-2 border-dashed border-muted-foreground/30 bg-muted/30" />
+                              ))}
+                              <span className="text-sm text-muted-foreground ml-1">
+                                {STRESS_BALANCE_MEMBERS.filled} of {STRESS_BALANCE_MEMBERS.total} spots filled
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {slots.length > 0 && (() => {
+                          const upcoming = slots
+                            .map((s) => ({ ...s, at: new Date(s.slot_at) }))
+                            .filter((s) => s.at > new Date())
+                            .sort((a, b) => a.at.getTime() - b.at.getTime());
+                          const next = upcoming[0];
+                          if (!next) return null;
+                          return (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Calendar className="h-4 w-4 text-primary/70" />
+                              <span>
+                                Next session: {format(next.at, 'EEEE, MMMM d')} at {format(next.at, 'h:mm a')}
+                              </span>
+                            </div>
+                          );
+                        })()}
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-border/60 bg-card/50 shadow-sm">
+                      <CardContent className="p-6">
+                        <div className="flex items-start gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <Sparkles className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-lg font-semibold text-foreground mb-2">
+                              Why this group was recommended
+                            </h3>
+                            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                              {group.name === STRESS_BALANCE_GROUP_NAME
+                                ? STRESS_BALANCE_WHY_RECOMMENDED
+                                : group.match_reason ?? `This group focuses on ${group.focus.replace(/_/g, ' ')} and matches your intake.`}
+                            </p>
+                            <ul className="space-y-2 text-sm text-muted-foreground">
+                              {group.name === STRESS_BALANCE_GROUP_NAME
+                                ? STRESS_BALANCE_ALIGNMENT.map((item) => (
+                                    <li key={item} className="flex items-start gap-2">
+                                      <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                                      {item}
+                                    </li>
+                                  ))
+                                : (
+                                  <>
+                                    {group.primary_concern && (
+                                      <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                                        Similar primary concerns around {group.primary_concern.toLowerCase()}
+                                      </li>
+                                    )}
+                                    {group.life_impact_areas && group.life_impact_areas.length > 0 && (
+                                      <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                                        Shared focus on {group.life_impact_areas.slice(0, 3).join(', ')}
+                                      </li>
+                                    )}
+                                    <li className="flex items-start gap-2">
+                                      <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                                      Matching emotional intensity level
+                                    </li>
+                                  </>
+                                )}
+                            </ul>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
-                    {group.match_reason && (
-                      <Card>
-                        <CardContent className="p-6 space-y-4">
-                          <h3 className="font-medium text-foreground">Why this group was recommended</h3>
-                          <p className="text-sm text-muted-foreground leading-relaxed">
-                            {group.match_reason}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    )}
-                    <Button
-                      onClick={() => navigate('/schedule')}
-                      size="lg"
-                      className="gap-2"
-                    >
-                      <Calendar className="w-4 h-4" />
-                      Choose Schedule
-                    </Button>
-                  </>
+                  </div>
                 )}
               </TabsContent>
 
-              {/* Growth Tab */}
               <TabsContent value="growth" className="mt-0">
                 <GrowthGarden />
               </TabsContent>
 
-              {/* Upcoming Tab */}
               <TabsContent value="upcoming" className="mt-0">
                 <UpcomingTab />
               </TabsContent>

@@ -17,9 +17,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-md border-b border-border">
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="sticky top-0 z-50 shrink-0 bg-card/80 backdrop-blur-md border-b border-border">
         <div className="container flex items-center justify-between h-16 px-4">
           <div className="flex items-center gap-6">
             <Link to="/dashboard" className="flex items-center gap-2">
@@ -33,7 +32,6 @@ export function AppLayout({ children }: AppLayoutProps) {
             </Link>
           </div>
 
-          {/* User Menu */}
           <div className="flex items-center gap-4">
             <span className="hidden sm:block text-sm text-muted-foreground">
               {user?.name || 'Guest'}
@@ -51,13 +49,11 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container px-4 py-6 lg:py-8">
+      <main className="container flex-1 px-4 py-6 lg:py-8">
         {children}
       </main>
 
-      {/* Footer - Trust signals */}
-      <footer className="border-t border-border bg-muted/30 mt-auto">
+      <footer className="shrink-0 border-t border-border bg-muted/30">
         <div className="container px-4 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">

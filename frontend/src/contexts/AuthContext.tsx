@@ -25,7 +25,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Check for demo session
     if (sessionId.startsWith('demo_')) {
       const storedUser = localStorage.getItem('sage_demo_user');
       if (storedUser) {

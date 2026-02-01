@@ -11,8 +11,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.core.logging_config import setup_logging
-from app.database import init_db
-from app import models  # noqa: F401 - register all models with Base before init_db
+from app import models  # noqa: F401
 from app.api import auth, chat, intake, groups, scheduling, payments, handoff
 
 setup_logging(debug=settings.debug)
@@ -46,10 +45,6 @@ app.add_middleware(
 )
 
 
-# Middleware disabled temporarily so 500s hit the exception handler (JSON + traceback)
-# @app.middleware("http")
-# async def logging_middleware(request, call_next): ...
-
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 app.include_router(intake.router, prefix="/api/intake", tags=["intake"])
@@ -61,12 +56,6 @@ app.include_router(handoff.router, prefix="/api/handoff", tags=["handoff"])
 
 @app.on_event("startup")
 async def startup():
-    try:
-        await init_db()
-        logger.info("Database connected and tables ready")
-    except Exception as e:
-        logger.warning("Database init failed (check DATABASE_URL): %s. App will start but DB-dependent routes will fail.", e)
-        print(f"\n>>> Database connection failed: {e} <<<\n>>> Check backend/.env DATABASE_URL (e.g. Supabase). <<<\n", flush=True)
     logger.info("Application started")
     groq_ok = bool(settings.groq_api_key and settings.groq_api_key.strip())
     openai_ok = bool(settings.openai_api_key and settings.openai_api_key.strip())

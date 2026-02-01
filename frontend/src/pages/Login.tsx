@@ -44,7 +44,6 @@ export default function Login() {
         title: 'Welcome back',
         description: 'You have been logged in successfully.',
       });
-      // Full-page redirect so the browser can prompt "Save password?" (SPA navigation does not trigger it)
       const target = isTherapist ? '/therapist' : '/dashboard';
       window.location.href = target;
       return;

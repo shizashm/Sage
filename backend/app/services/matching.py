@@ -11,7 +11,6 @@ from app.services.llm import llm_service
 
 logger = logging.getLogger(__name__)
 
-# Six groups: five from catalog + General (assign only to these)
 FOCUS_ANXIETY_STRESS = "anxiety_stress_management"
 FOCUS_GRIEF_LOSS = "grief_loss"
 FOCUS_POSTPARTUM = "postpartum_parenting"
@@ -66,27 +65,21 @@ def _match_focus(intake: dict) -> tuple[str, str]:
     intensity = intake.get("emotional_intensity")
     areas = intake.get("life_impact_areas")
 
-    # Grief & Loss
     if "grief" in text or "bereavement" in text or "loss" in concern or "mourn" in text:
         return FOCUS_GRIEF_LOSS, f"Primary concern: {primary}; life impact: {areas or 'general'}."
 
-    # Postpartum & Parenting
     if "postpartum" in text or "parenting" in text or "new parent" in text or "baby" in text or "exhaustion" in text and ("parent" in text or "child" in text):
         return FOCUS_POSTPARTUM, f"Primary concern: {primary}; life impact: {areas or 'general'}."
 
-    # Relationship & Interpersonal
     if "relationship" in text or "communication" in text or "boundary" in text or "conflict" in text or "interpersonal" in text:
         return FOCUS_RELATIONSHIP, f"Primary concern: {primary}; life impact: {areas or 'general'}."
 
-    # Workplace Burnout & Career
     if "burnout" in text or "career" in text or "professional" in text or "imposter" in text or "workplace" in text or "job" in text:
         return FOCUS_WORKPLACE_BURNOUT, f"Primary concern: {primary}; life impact: {areas or 'general'}."
 
-    # Anxiety & Stress (panic, overwhelm, racing thoughts)
     if "anxiety" in text or "anxious" in text or "stress" in text or "overwhelm" in text or "panic" in text or "racing" in text:
         return FOCUS_ANXIETY_STRESS, f"Primary concern: {primary}; emotional intensity {intensity or 'N/A'}; life impact: {areas or 'general'}."
 
-    # Default: General
     return FOCUS_GENERAL, f"Primary concern: {primary}; life impact: {areas or 'general'}."
 
 
@@ -115,7 +108,6 @@ async def assign_user_to_group(
     if not group:
         result = await db.execute(select(Group).limit(1))
         group = result.scalar_one()
-    # One active per user: set any existing active membership to withdrawn, then add new active
     await db.execute(
         update(GroupMember)
         .where(GroupMember.user_id == user_id, GroupMember.status == MEMBERSHIP_STATUS_ACTIVE)

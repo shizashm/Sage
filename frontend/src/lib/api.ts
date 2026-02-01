@@ -1,9 +1,5 @@
-// Sage API Client
-// All API calls go through this module
-
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
-// Session management
 export const getSessionId = (): string | null => {
   return localStorage.getItem('sage_session_id');
 };
@@ -16,7 +12,6 @@ export const clearSession = (): void => {
   localStorage.removeItem('sage_session_id');
 };
 
-// Base fetch wrapper with auth
 async function apiFetch<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -53,13 +48,14 @@ async function apiFetch<T>(
         : Array.isArray(error.detail)
           ? error.detail.map((e: { msg?: string }) => e.msg ?? JSON.stringify(e)).join(', ')
           : error.message ?? `HTTP ${response.status}`;
-    throw new Error(message);
+    const err = new Error(message) as Error & { status?: number };
+    err.status = response.status;
+    throw err;
   }
 
   return response.json();
 }
 
-// Auth API
 export interface AuthResponse {
   session_id: string;
   user: User;
@@ -70,7 +66,7 @@ export interface User {
   email: string;
   name: string;
   role: 'client' | 'therapist';
-  date_of_birth?: string; // ISO date "YYYY-MM-DD"
+  date_of_birth?: string;
 }
 
 export const authApi = {
@@ -107,15 +103,12 @@ export const authApi = {
     if (sessionId) {
       try {
         await apiFetch<{ status: string }>('/api/auth/logout', { method: 'POST' });
-      } catch {
-        // Still clear local session so user is logged out locally
-      }
+      } catch {}
     }
     clearSession();
   },
 };
 
-// Chat API (backend: send returns reply + turn_id + intake_complete + group details; history returns turns; complete returns status)
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -165,7 +158,6 @@ export const chatApi = {
   },
 };
 
-// Intake API (matches backend IntakeResponse)
 export interface IntakeResponse {
   primary_concern: string | null;
   contextual_background: string | null;
@@ -181,7 +173,6 @@ export const intakeApi = {
   },
 };
 
-// Groups API (backend returns group object directly; 404 when no group)
 export interface GroupResponse {
   id: string;
   name: string;
@@ -196,8 +187,8 @@ export const groupsApi = {
     try {
       return await apiFetch<GroupResponse>('/api/groups/my');
     } catch (e: unknown) {
-      const err = e as { message?: string };
-      if (err?.message?.includes('404') || (typeof err?.message === 'string' && err.message.toLowerCase().includes('no group'))) return null;
+      const err = e as Error & { status?: number };
+      if (err?.status === 404 || (typeof err?.message === 'string' && err.message.toLowerCase().includes('no group'))) return null;
       throw e;
     }
   },
@@ -207,7 +198,6 @@ export const groupsApi = {
   },
 };
 
-// Scheduling API (backend returns slots with slot_at)
 export interface SlotResponse {
   id: string;
   slot_at: string;
@@ -219,8 +209,8 @@ export const schedulingApi = {
       const res = await apiFetch<{ slots: SlotResponse[] }>('/api/scheduling/slots');
       return res.slots ?? [];
     } catch (e: unknown) {
-      const err = e as { message?: string };
-      if (err?.message?.includes('404') || (typeof err?.message === 'string' && err.message.toLowerCase().includes('no group'))) return [];
+      const err = e as Error & { status?: number };
+      if (err?.status === 404 || (typeof err?.message === 'string' && err.message.toLowerCase().includes('no group'))) return [];
       throw e;
     }
   },
@@ -233,7 +223,6 @@ export const schedulingApi = {
   },
 };
 
-// Payments API
 export interface Payment {
   id: string;
   amount: number;
@@ -259,7 +248,6 @@ export const paymentsApi = {
   },
 };
 
-// Therapist Handoff API
 export interface ParticipantSummary {
   id: string;
   name: string;

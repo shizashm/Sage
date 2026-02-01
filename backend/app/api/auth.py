@@ -22,7 +22,6 @@ from app.schemas.auth import SignupRequest, LoginRequest, AuthResponse, UserResp
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# PBKDF2-HMAC-SHA256 (stdlib only, no 72-byte limit like bcrypt).
 PBKDF2_ITERATIONS = 100_000
 PBKDF2_SALT_BYTES = 16
 STORED_FORMAT = "pbkdf2_sha256${}${}${}"
@@ -142,7 +141,6 @@ async def logout(
     x_session_id: str | None = Header(None, alias="X-Session-Id"),
 ):
     """Invalidate current session and close current chat session so next login gets a fresh intake schema."""
-    # Close user's current incomplete chat session so next chat starts fresh (empty turns → fresh extraction)
     result = await db.execute(
         select(ChatSession)
         .where(ChatSession.user_id == user.id, ChatSession.completed == False)
@@ -154,7 +152,6 @@ async def logout(
         chat_session.completed = True
         await db.flush()
         logger.info("Closed chat session on logout for fresh schema next time", extra={"user_id": str(user.id), "chat_session_id": str(chat_session.id)})
-    # Invalidate only this auth session (the one used for this request)
     if x_session_id:
         try:
             session_uuid = UUID(x_session_id)

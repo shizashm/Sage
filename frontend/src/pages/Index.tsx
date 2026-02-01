@@ -12,6 +12,7 @@ import {
   Heart,
 } from 'lucide-react';
 import heroImage from '@/assets/hero-abstract.jpg';
+import { MentraBackground } from '@/components/backgrounds/MentraBackground';
 
 const features = [
   {
@@ -69,6 +70,7 @@ export default function Index() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 lg:py-32">
+        <MentraBackground variant="hero" className="z-0" />
         {/* Background layers */}
         <div className="absolute inset-0 z-0">
           <img src={heroImage} alt="" className="w-full h-full object-cover opacity-20" />
@@ -124,6 +126,7 @@ export default function Index() {
 
       {/* How It Works */}
       <section className="relative py-24 overflow-hidden">
+        <MentraBackground variant="mid" className="z-0" />
         <div className="absolute inset-0 bg-gradient-to-b from-muted/50 to-background" />
         <div className="absolute top-0 left-1/4 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
         
@@ -169,6 +172,7 @@ export default function Index() {
 
       {/* Features */}
       <section className="relative py-24 overflow-hidden">
+        <MentraBackground variant="mid" className="z-0" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/20 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
         
@@ -214,6 +218,7 @@ export default function Index() {
 
       {/* CTA */}
       <section className="relative py-24 overflow-hidden">
+        <MentraBackground variant="cta" className="z-0" />
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/80" />
         <div className="absolute top-0 left-0 w-full h-full">
           <div className="absolute top-10 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />

@@ -8,7 +8,6 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Retry config for LLM extraction (transient errors only)
 EXTRACTION_MAX_RETRIES = 3
 EXTRACTION_RETRY_BASE_DELAY_SEC = 1.0
 RETRYABLE_HTTP_CODES = (429, 500, 502, 503, 504)
@@ -45,12 +44,10 @@ If they ask why we ask: we match them with others with similar focus and intensi
 - If asked what you are: you can say you're an AI intake assistant, not a human or substitute for professional support.
 """
 
-# Output guard: block if reply contains clinical/diagnostic language (avoid over-blocking)
 OUTPUT_BLOCK_PATTERNS = [
     "diagnosis", "diagnose", "disorder", "medication", "prescribe",
     "you should take", "treatment plan", "therapy technique",
 ]
-# "you have" removed: too broad—blocks e.g. "You have shared a lot"
 
 
 def _blocked_output(reply: str) -> bool:
@@ -64,7 +61,6 @@ def _blocked_output(reply: str) -> bool:
 
 def _mock_reply(user_message: str, conversation_history: list[dict]) -> str:
     """Mock LLM for demo when no API key is set."""
-    # Simple rule-based replies for demo
     msg_lower = user_message.lower()
     if "anxiety" in msg_lower or "stressed" in msg_lower:
         return "Thanks for sharing. How would you rate how much this affects you day to day, from 1 (a little) to 5 (a lot)?"
@@ -284,7 +280,6 @@ async def get_reply(user_message: str, conversation_history: list[dict]) -> tupl
     return reply, source, error_message
 
 
-# Group matching: LLM picks one group from catalog and gives a short reason
 MATCHING_SYSTEM = """You match a user to exactly one support group based on their intake. You will receive:
 1. The user's intake (primary concern, context, life impact areas, support goals).
 2. A list of groups with "focus" (unique key) and "name".

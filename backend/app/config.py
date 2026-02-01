@@ -6,11 +6,8 @@ from dotenv import load_dotenv
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
-# Load .env from backend folder so it works no matter where uvicorn is run from
 _BACKEND_DIR = Path(__file__).resolve().parent.parent
 _ENV_FILE = _BACKEND_DIR / ".env"
-
-# Force-load .env first
 load_dotenv(_ENV_FILE, override=True)
 
 
@@ -35,12 +32,10 @@ class Settings(BaseSettings):
     debug: bool = False
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/sage"
     secret_key: str = "change-me-in-production"
-    # LLM: set GROQ_API_KEY (free tier, no card) or OPENAI_API_KEY; leave both empty for mock
     groq_api_key: str = ""
     openai_api_key: str = ""
     huggingface_token: str = ""
     groq_model: str = "llama-3.1-8b-instant"
-    # Crisis line (displayed in fixed response)
     crisis_line_text: str = "Please contact a mental health professional or crisis helpline."
 
     model_config = {
@@ -50,12 +45,11 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _prefer_env_file_llm_keys(self):
-        """Use LLM keys from .env file only; if Groq is set, ignore OpenAI."""
         groq_from_file = _read_env_value("GROQ_API_KEY")
         openai_from_file = _read_env_value("OPENAI_API_KEY")
         if groq_from_file:
             object.__setattr__(self, "groq_api_key", groq_from_file)
-            object.__setattr__(self, "openai_api_key", "")  # never use OpenAI when Groq is set
+            object.__setattr__(self, "openai_api_key", "")
         elif openai_from_file:
             object.__setattr__(self, "openai_api_key", openai_from_file)
         return self

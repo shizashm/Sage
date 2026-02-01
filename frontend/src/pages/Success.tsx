@@ -44,9 +44,9 @@ export default function Success() {
 
   return (
     <AppLayout>
-      <div className="max-w-lg mx-auto text-center animate-fade-in">
-        {/* Success Icon */}
-        <div className="relative inline-block mb-8">
+      <div className="flex min-h-full flex-col justify-center">
+        <div className="max-w-lg mx-auto text-center animate-fade-in">
+          <div className="relative inline-block mb-8">
           <div className="w-24 h-24 rounded-full bg-success/10 flex items-center justify-center mx-auto animate-breathe">
             <CheckCircle2 className="w-12 h-12 text-success" />
           </div>
@@ -62,15 +62,14 @@ export default function Success() {
           Your spot in the group is confirmed. We're excited to have you.
         </p>
 
-        {/* Session Details - confirmed group from API */}
-        {loading ? (
-          <Card className="shadow-soft-lg text-left mb-8">
-            <CardContent className="p-6 flex items-center justify-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin text-primary" />
-              <span className="text-muted-foreground">Loading details…</span>
-            </CardContent>
-          </Card>
-        ) : (
+          {loading ? (
+            <Card className="shadow-soft-lg text-left mb-8">
+              <CardContent className="p-6 flex items-center justify-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                <span className="text-muted-foreground">Loading details…</span>
+              </CardContent>
+            </Card>
+          ) : (
           <Card className="shadow-soft-lg text-left mb-8">
             <CardContent className="p-6 space-y-4">
               {slot && (
@@ -117,10 +116,9 @@ export default function Success() {
               )}
             </CardContent>
           </Card>
-        )}
+          )}
 
-        {/* What's Next */}
-        <div className="bg-muted/50 rounded-xl p-6 mb-8 text-left">
+          <div className="bg-muted/50 rounded-xl p-6 mb-8 text-left">
           <h2 className="font-semibold text-foreground mb-4">What happens next?</h2>
           <ul className="space-y-3 text-sm">
             <li className="flex items-start gap-3">
@@ -148,19 +146,19 @@ export default function Success() {
               </span>
             </li>
           </ul>
-        </div>
+          </div>
 
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button asChild variant="outline" size="lg">
-            <Link to="/my-group">View Group Details</Link>
-          </Button>
-          <Button asChild size="lg" className="gap-2">
-            <Link to="/chat">
-              Start Another Session
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button asChild variant="outline" size="lg">
+              <Link to="/my-group">View Group Details</Link>
+            </Button>
+            <Button asChild size="lg" className="gap-2">
+              <Link to="/chat">
+                Start Another Session
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     </AppLayout>

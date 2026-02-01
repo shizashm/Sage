@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Sparkles, CheckCircle2, Loader2, ArrowLeft } from 'lucide-react';
 import { groupsApi } from '@/lib/api';
 
-// Mock until we have real leader and member count from backend
 const MOCK_LEADER = 'Dr. Sarah Chen';
 const MOCK_MEMBER_COUNT = 5;
 const MOCK_SPOTS_LEFT = 3;
@@ -36,8 +35,9 @@ export default function MyGroup() {
   if (loading) {
     return (
       <AppLayout>
-        <div className="max-w-3xl mx-auto flex items-center justify-center py-20">
+        <div className="flex min-h-full flex-col items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <span className="mt-3 text-sm text-muted-foreground">Loading your group…</span>
         </div>
       </AppLayout>
     );
@@ -67,20 +67,13 @@ export default function MyGroup() {
   return (
     <AppLayout>
       <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-serif text-foreground">Your Group Match</h1>
-            <p className="text-muted-foreground mt-1">
-              We found a supportive community for you
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => navigate('/dashboard')} className="gap-1">
-            <ArrowLeft className="w-4 h-4" />
-            Dashboard
-          </Button>
+        <div>
+          <h1 className="text-3xl font-serif text-foreground">Your Group Match</h1>
+          <p className="text-muted-foreground mt-1">
+            We found a supportive community for you
+          </p>
         </div>
 
-        {/* Group Card - real data + mocked leader/members */}
         <Card className="shadow-soft-lg overflow-hidden">
           <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 lg:p-8">
             <div className="flex items-start justify-between gap-4 mb-4">
@@ -117,7 +110,6 @@ export default function MyGroup() {
           </div>
         </Card>
 
-        {/* Why This Group - built from real intake data */}
         <Card className="shadow-soft border-primary/20">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
@@ -163,16 +155,6 @@ export default function MyGroup() {
             </div>
           </CardContent>
         </Card>
-
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <Link to="/schedule">Schedule session</Link>
-          </Button>
-          <Button variant="outline" onClick={() => navigate('/dashboard')} className="gap-1">
-            <ArrowLeft className="w-4 h-4" />
-            Dashboard
-          </Button>
-        </div>
       </div>
     </AppLayout>
   );

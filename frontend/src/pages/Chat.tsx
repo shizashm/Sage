@@ -56,7 +56,6 @@ export default function Chat() {
     scrollToBottom();
   }, [messages]);
 
-  // When matched, show waiting message first then group card after delay
   useEffect(() => {
     if (intakeComplete && groupMatch && showingWaiting) {
       const t = setTimeout(() => setShowingWaiting(false), 2200);
@@ -64,7 +63,6 @@ export default function Chat() {
     }
   }, [intakeComplete, groupMatch, showingWaiting]);
 
-  // Check if user has a scheduled slot (enable Payment only then)
   useEffect(() => {
     if (!intakeComplete || !groupMatch) return;
     let cancelled = false;
@@ -141,23 +139,25 @@ export default function Chat() {
   if (!consentGiven) {
     return (
       <AppLayout>
-        <div className="max-w-2xl mx-auto py-12 px-4">
-          <Card className="shadow-soft">
-            <CardContent className="p-6 lg:p-8 space-y-5">
-              <h2 className="text-xl font-serif text-foreground">Before we begin</h2>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                This intake chat is confidential. What you share will be used only to match you with a support group and to help your facilitator prepare. It will not be shared with other group members. By continuing, you agree to use this tool for its intended purpose and to seek emergency help (e.g. 988) if you are in crisis.
-              </p>
-              <div className="flex gap-3 pt-2">
-                <Button onClick={acceptConsent} className="gap-2">
-                  I agree, continue
-                </Button>
-                <Button variant="ghost" onClick={() => navigate('/dashboard')}>
-                  Back to dashboard
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="flex min-h-[calc(100vh-14rem)] flex-col justify-center px-4 py-8">
+          <div className="mx-auto w-full max-w-2xl">
+            <Card className="shadow-soft">
+              <CardContent className="p-6 lg:p-10 space-y-6">
+                <h2 className="text-xl font-serif text-foreground">Before we begin</h2>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  This intake chat is confidential. What you share will be used only to match you with a support group and to help your facilitator prepare. It will not be shared with other group members. By continuing, you agree to use this tool for its intended purpose and to seek emergency help (e.g. 988) if you are in crisis.
+                </p>
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-4">
+                  <Button onClick={acceptConsent} size="lg" className="gap-2">
+                    I agree, continue
+                  </Button>
+                  <Button variant="ghost" size="lg" onClick={() => navigate('/dashboard')} className="text-muted-foreground">
+                    Back to dashboard
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </AppLayout>
     );
@@ -166,7 +166,6 @@ export default function Chat() {
   return (
     <AppLayout>
       <div className="max-w-3xl mx-auto h-[calc(100vh-200px)] flex flex-col">
-        {/* Chat header */}
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button
@@ -184,7 +183,6 @@ export default function Chat() {
           </div>
         </div>
 
-        {/* Messages container */}
         <Card className="flex-1 overflow-hidden shadow-soft">
           <CardContent className="h-full flex flex-col p-0">
             <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4">
@@ -265,7 +263,6 @@ export default function Chat() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input area */}
             <div className="border-t border-border p-4 bg-card/50">
               <ChatInput
                 onSend={handleSendMessage}

@@ -12,9 +12,8 @@ import {
   X
 } from 'lucide-react';
 
-// Mock data - in a real app, this would come from the backend
 const mockGrowthData = {
-  growthStage: 1, // 0-50 (grows indefinitely into a garden)
+  growthStage: 1,
   totalMoments: 1,
   lastVisit: '2 days ago',
 };
@@ -35,11 +34,8 @@ export function GrowthGarden() {
 
   const handleSave = () => {
     if (entryText.trim()) {
-      // In a real app, save to backend
       setShowConfirmation(true);
-      setGrowthStage((prev) => prev + 1); // No limit - garden keeps growing
-      
-      // Reset after showing confirmation
+      setGrowthStage((prev) => prev + 1);
       setTimeout(() => {
         setSelectedAction(null);
         setEntryText('');
@@ -84,7 +80,6 @@ export function GrowthGarden() {
     }
   };
 
-  // Show confirmation state - calm and minimal
   if (showConfirmation) {
     return (
       <div className="space-y-8 py-8">
@@ -102,7 +97,6 @@ export function GrowthGarden() {
     );
   }
 
-  // Show entry form when action is selected
   if (selectedAction) {
     return (
       <Card className="border-border/30 bg-background/50 shadow-none">
@@ -155,63 +149,60 @@ export function GrowthGarden() {
     );
   }
 
-  // Default garden view - calm and centered
   return (
-    <div className="space-y-10 py-4">
-      {/* Garden visualization */}
-      <div className="text-center space-y-6">
-        <GardenIllustration growthStage={growthStage} className="py-2" />
-        
-        <div className="space-y-2 px-4">
-          <p className="text-foreground/70 text-sm">
-            Your support space is growing
-          </p>
-          <p className="text-muted-foreground/60 text-xs leading-relaxed">
-            There's no rush — growth continues when you return.
-          </p>
-        </div>
-      </div>
+    <Card className="border-border/50 bg-card/80 shadow-sm rounded-xl overflow-hidden">
+      <CardContent className="p-0">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 min-h-[340px] lg:min-h-[300px]">
+          <div className="lg:col-span-1 p-6 lg:p-8 space-y-4 flex flex-col justify-center">
+            <div className="space-y-2">
+              <h3 className="font-semibold text-foreground text-base leading-snug">
+                Your growth here is shown as a living plant.
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                It grows quietly through moments of care — whether that&apos;s journaling, self-reflection, or just showing up. Nothing is required, and nothing is ever lost.
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground/70">
+              If you&apos;d like to add something today
+            </p>
+            <div className="space-y-0.5">
+              <GrowthActionCard
+                icon={<PenLine className="w-4 h-4 text-muted-foreground" />}
+                title="Write a journal entry"
+                description="Whatever comes to mind"
+                onClick={() => handleActionSelect('journal')}
+              />
+              <GrowthActionCard
+                icon={<Heart className="w-4 h-4 text-muted-foreground" />}
+                title="Add something about yourself"
+                description="Something you'd like to remember"
+                onClick={() => handleActionSelect('self')}
+              />
+              <GrowthActionCard
+                icon={<MessageCircle className="w-4 h-4 text-muted-foreground" />}
+                title="Reflect on a session"
+                description="A thought that stayed with you"
+                onClick={() => handleActionSelect('reflect')}
+              />
+              <GrowthActionCard
+                icon={<Sparkles className="w-4 h-4 text-muted-foreground" />}
+                title="Leave a note for yourself"
+                description="Something kind"
+                onClick={() => handleActionSelect('note')}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground/50 pt-1">
+              Or simply close this space — that&apos;s okay too.
+            </p>
+          </div>
 
-      {/* Optional actions - understated */}
-      <div className="space-y-3 pt-2">
-        <p className="text-xs text-muted-foreground/50 px-1">
-          If you'd like to add something today
-        </p>
-        
-        <div className="grid gap-2">
-          <GrowthActionCard
-            icon={<PenLine className="w-4 h-4" />}
-            title="Write a journal entry"
-            description="Whatever comes to mind"
-            onClick={() => handleActionSelect('journal')}
-          />
-          
-          <GrowthActionCard
-            icon={<Heart className="w-4 h-4" />}
-            title="Add something about yourself"
-            description="Something you'd like to remember"
-            onClick={() => handleActionSelect('self')}
-          />
-          
-          <GrowthActionCard
-            icon={<MessageCircle className="w-4 h-4" />}
-            title="Reflect on a session"
-            description="A thought that stayed with you"
-            onClick={() => handleActionSelect('reflect')}
-          />
-          
-          <GrowthActionCard
-            icon={<Sparkles className="w-4 h-4" />}
-            title="Leave a note for yourself"
-            description="Something kind"
-            onClick={() => handleActionSelect('note')}
-          />
+          <div className="lg:col-span-2 relative bg-muted/20 min-h-[200px] lg:min-h-[300px]">
+            <div className="absolute bottom-4 right-4 lg:bottom-6 lg:right-6 w-[100px] lg:w-[120px]">
+              <GardenIllustration growthStage={growthStage} className="py-0" />
+            </div>
+          </div>
         </div>
-        
-        <p className="text-xs text-muted-foreground/40 text-center pt-6">
-          Or simply close this space — that's okay too.
-        </p>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
