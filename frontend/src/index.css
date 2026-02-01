@@ -1,0 +1,215 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Sage Design System - Calm, Trustworthy, Professional */
+
+@layer base {
+  :root {
+    /* Warm cream background for safety and calm */
+    --background: 40 33% 98%;
+    --foreground: 200 25% 20%;
+
+    /* Cards slightly warmer than background */
+    --card: 40 30% 99%;
+    --card-foreground: 200 25% 20%;
+
+    --popover: 40 30% 99%;
+    --popover-foreground: 200 25% 20%;
+
+    /* Sage/Teal primary - calming, therapeutic */
+    --primary: 160 35% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Soft sage secondary */
+    --secondary: 160 20% 95%;
+    --secondary-foreground: 160 35% 30%;
+
+    /* Muted warm gray */
+    --muted: 40 15% 94%;
+    --muted-foreground: 200 15% 45%;
+
+    /* Accent - warm sage highlight */
+    --accent: 160 30% 92%;
+    --accent-foreground: 160 35% 25%;
+
+    /* Soft coral for destructive (gentle, not alarming) */
+    --destructive: 10 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders and inputs - subtle warm gray */
+    --border: 40 20% 88%;
+    --input: 40 20% 88%;
+    --ring: 160 35% 40%;
+
+    --radius: 0.75rem;
+
+    /* Sidebar - slightly cooler for contrast */
+    --sidebar-background: 160 15% 97%;
+    --sidebar-foreground: 200 25% 25%;
+    --sidebar-primary: 160 35% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 160 25% 92%;
+    --sidebar-accent-foreground: 160 35% 25%;
+    --sidebar-border: 160 15% 90%;
+    --sidebar-ring: 160 35% 40%;
+
+    /* Custom Sage tokens */
+    --success: 150 50% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 40 90% 55%;
+    --warning-foreground: 40 90% 20%;
+    --info: 200 70% 50%;
+    --info-foreground: 0 0% 100%;
+
+    /* Chat bubbles */
+    --chat-ai: 160 25% 94%;
+    --chat-ai-foreground: 200 25% 20%;
+    --chat-user: 160 35% 40%;
+    --chat-user-foreground: 0 0% 100%;
+
+    /* Therapist view - more clinical */
+    --clinical: 200 30% 97%;
+    --clinical-foreground: 200 30% 20%;
+    --clinical-accent: 200 40% 50%;
+  }
+
+  .dark {
+    --background: 200 25% 10%;
+    --foreground: 40 20% 95%;
+
+    --card: 200 25% 12%;
+    --card-foreground: 40 20% 95%;
+
+    --popover: 200 25% 12%;
+    --popover-foreground: 40 20% 95%;
+
+    --primary: 160 40% 50%;
+    --primary-foreground: 200 25% 10%;
+
+    --secondary: 200 20% 18%;
+    --secondary-foreground: 160 30% 80%;
+
+    --muted: 200 20% 18%;
+    --muted-foreground: 40 15% 60%;
+
+    --accent: 200 20% 20%;
+    --accent-foreground: 160 30% 80%;
+
+    --destructive: 10 60% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 20% 20%;
+    --input: 200 20% 20%;
+    --ring: 160 40% 50%;
+
+    --sidebar-background: 200 25% 8%;
+    --sidebar-foreground: 40 20% 90%;
+    --sidebar-primary: 160 40% 50%;
+    --sidebar-primary-foreground: 200 25% 10%;
+    --sidebar-accent: 200 20% 15%;
+    --sidebar-accent-foreground: 160 30% 80%;
+    --sidebar-border: 200 20% 18%;
+    --sidebar-ring: 160 40% 50%;
+
+    --success: 150 45% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 40 80% 50%;
+    --warning-foreground: 40 80% 15%;
+    --info: 200 60% 45%;
+    --info-foreground: 0 0% 100%;
+
+    --chat-ai: 200 20% 18%;
+    --chat-ai-foreground: 40 20% 95%;
+    --chat-user: 160 40% 45%;
+    --chat-user-foreground: 0 0% 100%;
+
+    --clinical: 200 25% 12%;
+    --clinical-foreground: 40 20% 95%;
+    --clinical-accent: 200 50% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+}
+
+@layer components {
+  /* Gentle breathing animation for loading states */
+  .animate-breathe {
+    animation: breathe 3s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.02); opacity: 1; }
+  }
+
+  /* Soft fade in for content */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Chat message slide in */
+  .animate-message-in {
+    animation: messageIn 0.3s ease-out forwards;
+  }
+
+  @keyframes messageIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Gentle pulse for active states */
+  .animate-gentle-pulse {
+    animation: gentlePulse 2s ease-in-out infinite;
+  }
+
+  @keyframes gentlePulse {
+    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.2); }
+    50% { box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
+  }
+
+  /* Organic blob shape for decorative elements */
+  .blob-shape {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+
+  /* Glass effect for cards */
+  .glass-card {
+    background: hsl(var(--card) / 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+
+  /* Soft shadow for elevated elements */
+  .shadow-soft {
+    box-shadow: 
+      0 2px 8px -2px hsl(var(--foreground) / 0.05),
+      0 4px 16px -4px hsl(var(--foreground) / 0.08);
+  }
+
+  .shadow-soft-lg {
+    box-shadow: 
+      0 4px 12px -4px hsl(var(--foreground) / 0.06),
+      0 8px 24px -8px hsl(var(--foreground) / 0.1);
+  }
+}
